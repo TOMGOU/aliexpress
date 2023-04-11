@@ -9,6 +9,16 @@ import time
 import openpyxl
 import os 
 
+def isElementExist(driver, element):
+  flag=True
+  try:
+    # browser.find_element_by_css_selector(element)
+    driver.find_element(By.CSS_SELECTOR, element)
+    return flag
+  except:
+    flag=False
+    return flag
+
 def file_name(file_dir):   
   L={'file_name': [], 'url_name': []}  
   for root, dirs, files in os.walk(file_dir):
@@ -71,6 +81,25 @@ def fetchData(url):
     'detail_title': detail_title,
   }
 
+def login():
+  username = driver.find_element(By.ID,'fm-login-id')
+  password = driver.find_element(By.ID,'fm-login-password')
+  username.send_keys('2116491679@qq.com')
+  password.send_keys('FuJuAn666666')
+  # password.send_keys(Keys.RETURN)
+
+  sign_in = driver.find_element(By.XPATH, '//*[@id="root"]/div/div/div[2]/div/div[2]/div/div/button[2]')
+  sign_in.click()
+
+
+  iframe = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, 'baxia-dialog-content')))
+  driver.switch_to.frame(iframe)
+  sliderBg = driver.find_element(By.ID, 'nc_1_n1t')
+  slider = driver.find_element(By.ID, 'nc_1_n1z')
+  action_chains = ActionChains(driver)
+  action_chains.click_and_hold(slider).move_by_offset(sliderBg.size['width'], 0).release().perform()
+  driver.switch_to.default_content()
+
 service = Service('/Users/Application/chromedriver')
 
 # options = webdriver.ChromeOptions()
@@ -81,30 +110,22 @@ driver = webdriver.Chrome(service=service)
 
 driver.get('https://login.aliexpress.com/seller_new.htm?return_url=https://gsp.aliexpress.com/')
 
-username = driver.find_element(By.ID,'fm-login-id')
-password = driver.find_element(By.ID,'fm-login-password')
-username.send_keys('2116491679@qq.com')
-password.send_keys('FuJuAn666666')
-# password.send_keys(Keys.RETURN)
+login()
 
-sign_in = driver.find_element(By.XPATH, '//*[@id="root"]/div/div/div[2]/div/div[2]/div/div/button[2]')
-sign_in.click()
+# try:
+#   goods = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ae-layout-root"]/section[2]/div[1]/div/div/ul/li[2]/div/div/span/span/div/span')))
+# except:
+#   login()
 
+goods = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ae-layout-root"]/section[2]/div[1]/div/div/ul/li[2]/div/div/span/span/div/span')))
 
-iframe = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, 'baxia-dialog-content')))
-driver.switch_to.frame(iframe)
-sliderBg = driver.find_element(By.ID, 'nc_1_n1t')
-slider = driver.find_element(By.ID, 'nc_1_n1z')
-# target = driver.find_element(By.ID, 'pure-bx-feedback-btn')
-# action_chains.drag_and_drop(slider, 500).perform()
-action_chains = ActionChains(driver)
-action_chains.click_and_hold(slider).move_by_offset(sliderBg.size['width'], 0).release().perform()
-driver.switch_to.default_content()
+if isElementExist(driver, 'ae-layout-dialog-close'):
+  close1 = driver.find_element(By.CLASS_NAME, 'ae-layout-dialog-close')
+  close1.click()
+if isElementExist(driver, 'next-dialog-close'):
+  close2 = driver.find_element(By.CLASS_NAME, 'next-dialog-close')
+  close2.click()
 
-close = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CLASS_NAME, 'ae-layout-dialog-close')))
-close.click()
-
-goods = driver.find_element(By.XPATH, '//*[@id="ae-layout-root"]/section[2]/div[1]/div/div/ul/li[2]/div/div/span/span/div/span')
 goods.click()
 
 goodsUpload = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ae-layout-root"]/section[2]/div[1]/div/div/ul/li[2]/ul/li[1]/div/span/a')))
@@ -154,18 +175,17 @@ add_icon.click()
 
 upload_imgs = file_name('/Users/dsc/Study/05_selenium/aliexpress/imgs')
 
-handles = driver.window_handles
-upload_window_handle = None
-for handle in handles:
-  if handle != driver.current_window_handle:
-    upload_window_handle = handle
-driver.switch_to.window(upload_window_handle)
+WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
+driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
+upload_icon = driver.find_element(By.XPATH, "//*[@class='material-center-upload-inner']/input")
+upload_icon.send_keys('\n'.join(upload_imgs['url_name']))
 
-upload_icon = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[4]/div[2]/div/div[2]/div[2]/div/div/div/div/div[2]/div/div[1]/div')))
-# upload_icon.click()
-print(upload_imgs['url_name'])
-for file_path in upload_imgs['url_name']:
-  upload_icon.send_keys(file_path)
-# upload_icon.send_keys(upload_imgs['url_name'][0])
+# upload_confirm = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"确认上传") and @class="material-center-btn-helper"]')))
+upload_confirm = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@class="material-center-upload-footer"]/button[1]')))
+while True:
+  if upload_confirm.is_enabled():
+    upload_confirm.click()
+    break
 
-time.sleep(20)
+time.sleep(30)
+driver.quit()
