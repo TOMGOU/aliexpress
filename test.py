@@ -12,21 +12,20 @@ import os
 def isElementExist(driver, element):
   flag=True
   try:
-    # browser.find_element_by_css_selector(element)
     driver.find_element(By.CSS_SELECTOR, element)
     return flag
   except:
     flag=False
     return flag
 
-def file_name(file_dir):   
-  L={'file_name': [], 'url_name': []}  
-  for root, dirs, files in os.walk(file_dir):
-    for file in files:  
-      if os.path.splitext(file)[1] == '.jpg':  
-        L['url_name'].append(os.path.join(root, file))
-        L['file_name'].append(os.path.splitext(file)[0])           
-  return L
+def file_name(file_dir): 
+  img_list=os.listdir(file_dir)
+  img_list.sort(key = lambda x: int(x[:-4]))
+  img_nums=len(img_list)
+  url_name = []
+  for i in range(img_nums):
+    url_name.append(file_dir + '/' + img_list[i])
+  return url_name
 
 def fetchData(url):
   # 打开文件
@@ -34,13 +33,6 @@ def fetchData(url):
 
   # 选择工作表
   worksheet = workbook['Sheet1']
-
-  # 第一行分析
-  # first = []
-  # for index, cell in enumerate(worksheet['A1:A40']):
-  #   print(cell[0].value, end="\n")
-  #   if cell[0].value:
-  #     first.append(index + 1)
 
   # 读取标题
   title = worksheet['B1'].value
@@ -84,41 +76,48 @@ def fetchData(url):
 def login():
   username = driver.find_element(By.ID,'fm-login-id')
   password = driver.find_element(By.ID,'fm-login-password')
-  username.send_keys('2116491679@qq.com')
-  password.send_keys('FuJuAn666666')
-  # password.send_keys(Keys.RETURN)
-
+  UN = '2116491679@qq.com'
+  PW = 'FuJuAn666666'
+  time.sleep(1)
+  username.send_keys(UN)
+  driver.execute_script(f"document.evaluate(`//*[@id='fm-login-id']`, document).iterateNext().setAttribute('value', '{UN}')")
+  time.sleep(1)
+  password.send_keys(PW)
+  driver.execute_script(f"document.evaluate(`//*[@id='fm-login-password']`, document).iterateNext().setAttribute('value', '{PW}')")
+  time.sleep(1)
   sign_in = driver.find_element(By.XPATH, '//*[@id="root"]/div/div/div[2]/div/div[2]/div/div/button[2]')
   sign_in.click()
 
+def slide():
   iframe = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.ID, 'baxia-dialog-content')))
   driver.switch_to.frame(iframe)
   sliderBg = driver.find_element(By.ID, 'nc_1_n1t')
   slider = driver.find_element(By.ID, 'nc_1_n1z')
   action_chains = ActionChains(driver)
   action_chains.click_and_hold(slider).move_by_offset(sliderBg.size['width'], 0).release().perform()
-  time.sleep(3)
   driver.switch_to.default_content()
-  time.sleep(1)
 
-service = Service('/Users/tangyong/Application/chromedriver')
+service = Service('/Users/Application/chromedriver')
 
-# options = webdriver.ChromeOptions()
+options = webdriver.ChromeOptions()
 # options.add_experimental_option('detach', True)
-# driver = webdriver.Chrome(service=service, options=options)
-
-driver = webdriver.Chrome(service=service)
+options.add_argument("--disable-notifications")
+driver = webdriver.Chrome(service=service, options=options)
 
 driver.get('https://login.aliexpress.com/seller_new.htm?return_url=https://gsp.aliexpress.com/')
 
+script = 'Object.defineProperty(navigator, "webdriver", {get: () => false,});'
+driver.execute_script(script)
+
 login()
+slide()
 
-# try:
-#   goods = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ae-layout-root"]/section[2]/div[1]/div/div/ul/li[2]/div/div/span/span/div/span')))
-# except:
-#   login()
-
-time.sleep(2)
+while True:
+  try:
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ae-layout-root"]/section[2]/div[1]/div/div/ul/li[2]/div/div/span/span/div/span')))
+    break
+  except:
+    login()
 
 goods = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="ae-layout-root"]/section[2]/div[1]/div/div/ul/li[2]/div/div/span/span/div/span')))
 
@@ -168,22 +167,22 @@ confirm.click()
 
 driver.maximize_window()
 
-time.sleep(1)
+time.sleep(2)
 
+### ----商品图片---- ###
 title_element = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="struct-title"]/div/div[1]/label')))
 add_icon = WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="struct-mainImage"]/div/div[2]/div/div[1]/div/div/div/div/div[1]/div/div/div/div[2]/div')))
-# driver.execute_script("window.focus();document.body.style.zoom='100%';window.scrollTo(0, 2000);")
+time.sleep(1)
 driver.execute_script("arguments[0].scrollIntoView();", title_element)
-# ActionChains(driver).move_by_offset(0, 1000).perform()
 time.sleep(1)
 add_icon.click()
 
-upload_imgs = file_name('/Users/tangyong/test/automation/aliexpress/imgs')
+upload_imgs = file_name('/Users/dsc/Study/05_selenium/aliexpress/imgs')
 
 WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
 driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
 upload_icon = driver.find_element(By.XPATH, "//*[@class='material-center-upload-inner']/input")
-upload_icon.send_keys('\n'.join(upload_imgs['url_name']))
+upload_icon.send_keys('\n'.join(upload_imgs))
 
 upload_confirm = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@class="material-center-upload-footer"]/button[1]')))
 while True:
@@ -192,19 +191,24 @@ while True:
     break
 
 time.sleep(1)
+
+### ----产品属性---- ###
 good_video = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"产品视频") and @class="label"]')))
 driver.execute_script("arguments[0].scrollIntoView();", good_video)
 
-time.sleep(1)
+time.sleep(0.5)
 brand_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-catProperty"]/div/div[2]/div/div[2]/div/div/div[1]/div/div[2]/div[1]/span/span/span[1]/span/input')))
 brand_input.click()
 
-brand = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[5]/div/div/div[2]/div/div/div/div[1]')))
+time.sleep(0.5)
+brand = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@class="options-content"]/div/div/div/div[1]')))
 brand.click()
 
+time.sleep(0.5)
 area = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-catProperty"]/div/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div[1]/span/span/span[1]/span/input')))
 area.click()
 
+time.sleep(0.5)
 china = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"中国大陆(Origin)(Mainland China)") and @class="options-item"]')))
 china.click()
 
@@ -213,11 +217,12 @@ time.sleep(1)
 phone_type = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-catProperty"]/div/div[2]/div/div[2]/div/div/div[6]/div/div[2]/div[1]/span/span/span[1]/span/input')))
 phone_type.click()
 
-phone_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[7]/div/div/div[1]/span/input')))
+phone_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@class="next-overlay-wrapper opened"]/div/div/div[1]/span/input')))
 phone_input.send_keys(data['models'])
 phone_result = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"iPhone(iPhone)") and @class="options-item"]')))
 phone_result.click()
 
+### ----价格与库存---- ###
 origin = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"发货地") and @class="label"]')))
 driver.execute_script("arguments[0].scrollIntoView();", origin)
 
@@ -227,21 +232,16 @@ material.click()
 time.sleep(0.5)
 
 price = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[2]/div/div/span/span/span/input')))
-# price.click()
-# price.send_keys(data['price'])
 action_chains = ActionChains(driver)
 action_chains.double_click(price).perform()
 time.sleep(1)
 action_chains.send_keys(data['price']).send_keys(Keys.ENTER).perform()
+time.sleep(0.5)
 driver.execute_script("document.evaluate(`//*[@id='struct-sku']/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[2]/div/div/span/span/span/input`, document).iterateNext().setAttribute('value', " + str(data['price']) + ")")
 
 time.sleep(1)
 
 inventory = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[3]/div/span/span/span/input')))
-# print(data['inventory'])
-# action_chains.double_click(inventory).perform()
-# time.sleep(3)
-# driver.execute_script("document.evaluate(`//*[@id='struct-sku']/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[3]/div/span/span/span/input`, document).iterateNext().setAttribute('value', '1000')")
 
 action_chains.double_click(inventory).perform()
 time.sleep(1)
@@ -253,8 +253,9 @@ time.sleep(1)
 code = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[4]/div/span/span/span/input')))
 code.click()
 
-time.sleep(3)
+time.sleep(1)
 
+### ----详细描述---- ###
 description = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"详描语言") and @class="label"]')))
 driver.execute_script("arguments[0].scrollIntoView();", description)
 
@@ -270,7 +271,7 @@ imgs_upload_tab.click()
 WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
 driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
 upload_icon = driver.find_element(By.XPATH, "//*[@class='material-center-upload-inner']/input")
-upload_icon.send_keys('\n'.join(upload_imgs['url_name']))
+upload_icon.send_keys('\n'.join(upload_imgs))
 
 upload_confirm = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@class="material-center-upload-footer"]/button[1]')))
 while True:
@@ -288,6 +289,44 @@ mobile_import.click()
 
 mobile_import_confirm = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@class="preview-dialog-footerBtn"]/button[1]')))
 mobile_import_confirm.click()
+
+### ----包装与物流---- ###
+delivery_date = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="deliveryPeriod"]')))
+delivery_date.send_keys('7')
+
+delivery_weight = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-logisticsWeight"]/div/div[2]/div/div/div/div/div[1]/span/span[1]/span/input')))
+delivery_weight.send_keys('0.05')
+
+size_length = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-logisticsSize"]/div/div[2]/div[1]/div/div/div/div/span[1]/input')))
+size_length.send_keys('12')
+
+time.sleep(1)
+
+size_width = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-logisticsSize"]/div/div[2]/div[1]/div/div/div/div/span[3]/input')))
+size_width.send_keys('10')
+
+time.sleep(1)
+
+size_height = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-logisticsSize"]/div/div[2]/div[1]/div/div/div/div/span[5]/input')))
+size_height.send_keys('1')
+
+time.sleep(1)
+
+delivery_date.click()
+
+delivery_template = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-freightTemplate"]/div/div[2]/div/div/div/div/span[1]')))
+delivery_template.click()
+
+time.sleep(1)
+
+new_template = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"新手运费模板 (Location: CN)") and @class="options-item"]')))
+new_template.click()
+
+time.sleep(1)
+
+### ----提交表单---- ###
+# submit = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-buttons"]/button[1]')))
+# submit.click()
 
 time.sleep(30)
 driver.quit()

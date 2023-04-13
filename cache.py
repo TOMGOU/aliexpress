@@ -5,7 +5,7 @@ import time
 service = Service('/Users/tangyong/Application/chromedriver')
 options = webdriver.ChromeOptions()
 # options.add_argument("user-data-dir=~/Library/'Application Support'/Google/Chrome/")
-options.add_argument("~/Library/Caches/Google/Chrome/")
+options.add_argument("~/Library/Caches/Google/Chrome/Default/Cache")
 
 driver = webdriver.Chrome(service=service, options=options)
 
