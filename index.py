@@ -3,6 +3,7 @@
 import sys,os
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QDate, QDateTime
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit, QLabel, QComboBox, QDateTimeEdit, QApplication, QFileDialog)
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -46,7 +47,7 @@ class Upload(QWidget):
     self.source_btn.clicked.connect(self.select_source)
     self.source_imgs = QLineEdit('/Users/dsc/Study/05_selenium/aliexpress/imgs', self)
     self.source_imgs.move(120, 120)
-    self.source_imgs.resize(250,30)
+    self.source_imgs.resize(450,30)
 
     # Excel 文件选择按钮和选择编辑框
     self.source_btn = QPushButton('Excel 文件', self)
@@ -55,12 +56,20 @@ class Upload(QWidget):
     self.source_btn.clicked.connect(self.select_file)
     self.source_excel = QLineEdit('/Users/dsc/Study/05_selenium/aliexpress/example.xlsx', self)
     self.source_excel.move(120, 165)
-    self.source_excel.resize(250,30)
+    self.source_excel.resize(450,30)
 
     # 上传按钮
     self.save_btn = QPushButton('开始上传',self)
-    self.save_btn.move(200, 220)
-    self.save_btn.resize(140, 30)
+    self.save_btn.move(400, 220)
+    self.save_btn.resize(140, 40)
+    button_style = '''
+      QPushButton:hover {
+        background-color: #fff;
+        border: 1px solid red;
+      }
+    '''
+    self.save_btn.setStyleSheet(button_style)
+    self.save_btn.enterEvent = self.save_btn.setCursor(QCursor(Qt.PointingHandCursor))
     self.save_btn.clicked.connect(self.kick)
 
     # 用户提示区
@@ -70,7 +79,7 @@ class Upload(QWidget):
     self.result_le.setStyleSheet('color: blue;')
 
     # 整体界面设置
-    self.resize(400, 400)
+    self.resize(600, 400)
     self.center()
     self.setWindowTitle('速卖通商品自动化上传')#设置界面标题名
     self.show()
@@ -235,11 +244,12 @@ class MyThread(QThread):
         break
     
     set_label_func('商品图片上传完成！！')
+
     ### ----产品属性---- ###
     good_video = wait.until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"产品视频") and @class="label"]')))
     driver.execute_script("arguments[0].scrollIntoView();", good_video)
 
-    time.sleep(0.1)
+    time.sleep(0.3)
 
     brand_input = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="struct-catProperty"]/div/div[2]/div/div[2]/div/div/div[1]/div/div[2]/div[1]/span/span/span[1]/span/input')))
     brand_input.click()
@@ -250,7 +260,7 @@ class MyThread(QThread):
     area = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="struct-catProperty"]/div/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div[1]/span/span/span[1]/span/input')))
     area.click()
 
-    time.sleep(0.3)
+    time.sleep(0.5)
     china_text = "中国大陆(Origin)(Mainland China)"
     china = wait.until(EC.visibility_of_element_located((By.XPATH, f'//*[contains(text(),"{china_text}") and @class="options-item"]')))
     china.click()
@@ -267,28 +277,53 @@ class MyThread(QThread):
     set_label_func('产品属性填写完成！！')
 
     ### ----价格与库存---- ###
+    color = wait.until(EC.presence_of_element_located((By.ID, 'sale-card')))
+    driver.execute_script("arguments[0].scrollIntoView();", color)
+
+    for index, color in enumerate(data['colors']):
+      color_input = wait.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="struct-p-14"]/div/div[2]/div/div[1]/div/div/div/div[{str(index + 1)}]/div/span[1]/span/span[1]/span/input')))
+      color_input.click()
+
+      color_input_value = wait.until(EC.visibility_of_element_located((By.XPATH, f'//*[@class="next-overlay-wrapper opened"]/ul/li[{str(index + 1)}]/div')))
+      color_input_value.click()
+      
+      color_input_custom = wait.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="struct-p-14"]/div/div[2]/div/div[1]/div/div/div/div[{str(index + 1)}]/div/span[2]/span/span/span/input')))
+      color_input_custom.send_keys(color)
+
+      color_input_custom = wait.until(EC.visibility_of_element_located((By.XPATH, f'//*[@id="struct-p-14"]/div/div[2]/div/div[1]/div/div/div/div[{str(index + 1)}]/div/span[3]/button')))
+      color_input_custom.click()
+
+      wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
+      driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
+      upload_icon = driver.find_element(By.XPATH, "//*[@class='material-center-upload-inner']/input")
+      upload_icon.send_keys(upload_imgs[index])
+
+      upload_confirm = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@class="material-center-upload-footer"]/button[1]')))
+      while True:
+        if upload_confirm.is_enabled():
+          upload_confirm.click()
+          break
+
     origin = wait.until(EC.presence_of_element_located((By.XPATH, '//*[contains(text(),"发货地") and @class="label"]')))
     driver.execute_script("arguments[0].scrollIntoView();", origin)
-
-    material1 = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-p-10"]/div/div[2]/div/div/div/div/div/div/div[1]/div/label/span[1]/input')))
-    material1.click()
-    material2 = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="struct-p-10"]/div/div[2]/div/div/div/div/div/div/div[2]/div/label/span[1]/input')))
-    material2.click()
-
-    price = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[2]/div/div/span/span/span/input')))
     action_chains = ActionChains(driver)
+
+    for index, material in enumerate(data['materials']):
+      material_checkbox = wait.until(EC.presence_of_element_located((By.XPATH, f'//*[@id="struct-p-10"]/div/div[2]/div/div/div/div/div/div/div[{str(index + 1)}]/div/label/span[1]/input')))
+      material_checkbox.click()
+      material_xpath = f'//*[@id="struct-p-10"]/div/div[2]/div/div/div/div/div/div/div[{str(index + 1)}]/div/span/span/span/input'
+      material_input = wait.until(EC.presence_of_element_located((By.XPATH, material_xpath)))
+      material_input.clear()
+      action_chains.move_to_element(material_input).click().send_keys(Keys.BACK_SPACE * len(material_input.get_attribute('value'))).perform()
+      driver.execute_script("arguments[0].value = '';", material_input)
+      material_input.send_keys(material)
+
+    price_xpath = f'//*[@id="struct-sku"]/div/div[2]/div[1]/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr[1]/td[3]/div/div/span/span/span/input'
+    price = wait.until(EC.element_to_be_clickable((By.XPATH, price_xpath)))
     action_chains.double_click(price).perform()
-    action_chains.send_keys(data['price']).send_keys(Keys.ENTER).perform()
-    driver.execute_script("document.evaluate(`//*[@id='struct-sku']/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[2]/div/div/span/span/span/input`, document).iterateNext().setAttribute('value', " + str(data['price']) + ")")
 
-    inventory = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[3]/div/span/span/span/input')))
-
-    action_chains.double_click(inventory).perform()
-    action_chains.send_keys(data['inventory']).send_keys(Keys.ENTER).perform()
-    driver.execute_script("document.evaluate(`//*[@id='struct-sku']/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[3]/div/span/span/span/input`, document).iterateNext().setAttribute('value', " + str(data['inventory']) + ")")
-
-    # code = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr/td[4]/div/span/span/span/input')))
-    # code.click()
+    for i in range(1, len(data['materials']) * len(data['colors']) + 1):
+      action_chains.send_keys(data['price']).send_keys(Keys.ENTER).send_keys(Keys.TAB).send_keys(data['inventory']).send_keys(Keys.TAB).send_keys(Keys.TAB).perform()
 
     set_label_func('价格与库存填写完成！！')
 
@@ -360,8 +395,7 @@ class MyThread(QThread):
     # submit = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-buttons"]/button[1]')))
     # submit.click()
 
-    # time.sleep(30)
-    driver.quit()
+    # driver.quit()
 
     set_label_func('done!!!!!!!!!')
 

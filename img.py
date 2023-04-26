@@ -1,4 +1,4 @@
-import os 
+import os, time
 
 def file_name(file_dir):   
   L={'file_name': [], 'url_name': []}  
@@ -19,8 +19,14 @@ upload_imgs = file_name('/Users/dsc/Study/05_selenium/aliexpress/imgs')
 #   path_split_by_newline += new_path
 # list = [a for file_path in upload_imgs['url_name']]
 # path_split_by_newline = ''.join(file_path)
-print('\n'.join(upload_imgs['url_name']))
+# print('\n'.join(upload_imgs['url_name']))
 
 # print(sorted(upload_imgs['url_name']))
- 
 
+colors = ['1', '2', '3', '4']
+# for index, cell in enumerate(colors):
+#   time.sleep(2)
+#   print(index + 1, cell)
+ 
+for i in range(1, len(colors) + 1):
+  print(i)
