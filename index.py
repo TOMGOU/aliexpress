@@ -144,7 +144,7 @@ class MyThread(QThread):
     ###  MAC ###
     service = Service('/Users/Application/chromedriver')
     options = webdriver.ChromeOptions()
-    options.add_argument("--disable-notifications")
+    options.add_experimental_option('detach', True)
     # options.add_argument('--headless')
     driver = webdriver.Chrome(service=service, options=options)
 
@@ -260,7 +260,7 @@ class MyThread(QThread):
     area = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="struct-catProperty"]/div/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div[1]/span/span/span[1]/span/input')))
     area.click()
 
-    time.sleep(0.5)
+    time.sleep(1)
     china_text = "中国大陆(Origin)(Mainland China)"
     china = wait.until(EC.visibility_of_element_located((By.XPATH, f'//*[contains(text(),"{china_text}") and @class="options-item"]')))
     china.click()
@@ -318,12 +318,28 @@ class MyThread(QThread):
       driver.execute_script("arguments[0].value = '';", material_input)
       material_input.send_keys(material)
 
-    price_xpath = f'//*[@id="struct-sku"]/div/div[2]/div[1]/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr[1]/td[3]/div/div/span/span/span/input'
-    price = wait.until(EC.element_to_be_clickable((By.XPATH, price_xpath)))
-    action_chains.double_click(price).perform()
+    # price_xpath = f'//*[@id="struct-sku"]/div/div[2]/div[1]/div/div/div/div[2]/div/div/div/div[3]/div/table/tbody/tr[1]/td[3]/div/div/span/span/span/input'
+    # price = wait.until(EC.element_to_be_clickable((By.XPATH, price_xpath)))
+    # action_chains.double_click(price).perform()
 
-    for i in range(1, len(data['materials']) * len(data['colors']) + 1):
-      action_chains.send_keys(data['price']).send_keys(Keys.ENTER).send_keys(Keys.TAB).send_keys(data['inventory']).send_keys(Keys.TAB).send_keys(Keys.TAB).perform()
+    batch_fill = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[1]/div/div/button')))
+    batch_fill.click()
+
+    price_input = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[2]/div/div/div/div[2]/div/div/div[3]/div/div/div/div/div/span/span/span/input')))
+    action_chains.double_click(price_input).send_keys(data['price']).send_keys(Keys.ENTER).send_keys(Keys.TAB).send_keys(data['inventory']).perform()
+
+    batch_fill_confirm = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[1]/div[2]/button[1]')))
+    batch_fill_confirm.click()
+
+    time.sleep(1)
+
+    batch_fill_finish = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="struct-sku"]/div/div[2]/div/div/div/div/div[1]/div[2]/button[2]')))
+    batch_fill_finish.click()
+
+    # for i in range(1, len(data['materials']) * len(data['colors']) + 1):
+    #   action_chains.send_keys(data['price']).send_keys(Keys.ENTER).send_keys(Keys.TAB).send_keys(data['inventory']).send_keys(Keys.TAB).send_keys(Keys.TAB).perform()
+    #   if i % 10 == 0:
+    #     time.sleep(0.1)
 
     set_label_func('价格与库存填写完成！！')
 
@@ -438,25 +454,29 @@ class MyThread(QThread):
 
     # 读取颜色
     colors = []
-    for index, cell in enumerate(worksheet['B3:B10']):
-      colors.append(cell[0].value)
+    for index, cell in enumerate(worksheet['B3:B12']):
+      color_cvalue = cell[0].value
+      if color_cvalue is not None:
+        colors.append(color_cvalue)
 
     # 读取材质
     materials = []
-    for index, cell in enumerate(worksheet['B11:B34']):
-      materials.append(cell[0].value)
+    for index, cell in enumerate(worksheet['B13:B39']):
+      material_value = cell[0].value
+      if material_value is not None:
+        materials.append(material_value)
 
     # 读取价格
-    price = worksheet['B35'].value
+    price = worksheet['B40'].value
 
     # 读取库存
-    inventory = worksheet['B36'].value
+    inventory = worksheet['B41'].value
 
     # 读取SKU
-    sku = worksheet['B37'].value
+    sku = worksheet['B42'].value
 
     # 读取详描标题
-    detail_title = worksheet['B38'].value
+    detail_title = worksheet['B43'].value
 
     return {
       'title': title,

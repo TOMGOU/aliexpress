@@ -23,28 +23,32 @@ print(models)
 
 # 读取颜色
 colors = []
-for index, cell in enumerate(worksheet['B3:B10']):
-  print(cell[0].value, end="\n")
-  colors.append(cell[0].value)
+for index, cell in enumerate(worksheet['B3:B12']):
+  color_cvalue = cell[0].value
+  if color_cvalue is not None:
+    print(color_cvalue, end="\n")
+    colors.append(color_cvalue)
 
 # 读取材质
 materials = []
-for index, cell in enumerate(worksheet['B11:B34']):
-  print(cell[0].value, end="\n")
-  materials.append(cell[0].value)
+for index, cell in enumerate(worksheet['B13:B39']):
+  material_value = cell[0].value
+  if material_value is not None:
+    print(material_value, end="\n")
+    materials.append(material_value)
 
 # 读取价格
-price = worksheet['B35'].value
+price = worksheet['B40'].value
 print(price)
 
 # 读取库存
-inventory = worksheet['B36'].value
+inventory = worksheet['B41'].value
 print(inventory)
 
 # 读取SKU
-sku = worksheet['B37'].value
+sku = worksheet['B42'].value
 print(sku)
 
 # 读取详描标题
-detail_title = worksheet['B38'].value
+detail_title = worksheet['B43'].value
 print(detail_title)
