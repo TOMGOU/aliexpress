@@ -145,6 +145,8 @@ class MyThread(QThread):
     service = Service('/Users/Application/chromedriver')
     options = webdriver.ChromeOptions()
     options.add_experimental_option('detach', True)
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_experimental_option('excludeSwitches', ['enable-automation'])
     # options.add_argument('--headless')
     driver = webdriver.Chrome(service=service, options=options)
 
@@ -230,7 +232,9 @@ class MyThread(QThread):
     driver.execute_script("arguments[0].scrollIntoView();", title_element)
     add_icon.click()
 
-    upload_imgs = self.file_name(imgs)
+    upload_imgs = self.file_name(imgs + '/1')
+    color_imgs = self.file_name(imgs + '/2')
+    detail_imgs = self.file_name(imgs + '/3')
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
     driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
@@ -296,7 +300,7 @@ class MyThread(QThread):
       wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
       driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
       upload_icon = driver.find_element(By.XPATH, "//*[@class='material-center-upload-inner']/input")
-      upload_icon.send_keys(upload_imgs[index])
+      upload_icon.send_keys(color_imgs[index])
 
       upload_confirm = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@class="material-center-upload-footer"]/button[1]')))
       while True:
@@ -359,7 +363,7 @@ class MyThread(QThread):
     wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
     driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
     upload_icon = driver.find_element(By.XPATH, "//*[@class='material-center-upload-inner']/input")
-    upload_icon.send_keys('\n'.join(upload_imgs))
+    upload_icon.send_keys('\n'.join(detail_imgs))
 
     upload_confirm = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@class="material-center-upload-footer"]/button[1]')))
     while True:
@@ -422,7 +426,7 @@ class MyThread(QThread):
   def isElementExist(self, driver, element):
     flag=True
     try:
-      driver.find_element(By.CSS_SELECTOR, element)
+      driver.find_element(By.CLASS_NAME, element)
       return flag
     except:
       flag=False

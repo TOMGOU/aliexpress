@@ -102,6 +102,8 @@ service = Service('/Users/Application/chromedriver')
 options = webdriver.ChromeOptions()
 # options.add_experimental_option('detach', True)
 options.add_argument("--disable-notifications")
+options.add_argument('--disable-blink-features=AutomationControlled')
+options.add_experimental_option('excludeSwitches', ['enable-automation'])
 driver = webdriver.Chrome(service=service, options=options)
 
 driver.get('https://login.aliexpress.com/seller_new.htm?return_url=https://gsp.aliexpress.com/')
@@ -177,7 +179,10 @@ driver.execute_script("arguments[0].scrollIntoView();", title_element)
 time.sleep(1)
 add_icon.click()
 
-upload_imgs = file_name('/Users/dsc/Study/05_selenium/aliexpress/imgs')
+imgs = '/Users/dsc/Study/05_selenium/aliexpress/imgs'
+upload_imgs = file_name(imgs + '/1')
+color_imgs = file_name(imgs + '/2')
+detail_imgs = file_name(imgs + '/3')
 
 WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
 driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
@@ -271,7 +276,7 @@ imgs_upload_tab.click()
 WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, "//*[@class='material-center-upload-inner']")))
 driver.execute_script("document.evaluate(`//*[@class='material-center-upload-inner']`, document).iterateNext().getElementsByTagName('input')[0].style.display = 'block'")
 upload_icon = driver.find_element(By.XPATH, "//*[@class='material-center-upload-inner']/input")
-upload_icon.send_keys('\n'.join(upload_imgs))
+upload_icon.send_keys('\n'.join(color_imgs))
 
 upload_confirm = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@class="material-center-upload-footer"]/button[1]')))
 while True:
